@@ -1,6 +1,6 @@
 #!/usr/bin/env Python3
 #
-# Copyright 2024 Kenneth J. Gibson
+# Copyright © 2024 Kenneth J Gibson   kenjgibson@gmail.com
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-""" 
-Simple IEEE 2030.5 SEP client  
-"""
-
-__authors__ = [
-  '"Ken Gibson" <kenjgibson@gmail.com>'
-]
+ 
+# Simple IEEE 2030.5 SEP client  
 
 import requests
 import json
@@ -29,13 +23,18 @@ import logging
 from sep_types import *
 
 class SEPClient:
-    def __init__(self):
-        # Full implementation will take initial values here
+    def __init__(self, der_id=0):
+        # Optionally accept a DER ID for interacting with the DERMS in a
+        # multi-DER simulation.  This mirrors the 2030.5 usage where the DER
+        # is pre-configured and registered with the DERMS out-of-band.
+        # If no ID provided, assume single DER simulation.
+        self.id = der_id
         return
 
     def discoverDERMS(self):
         # LOTS of discovery and security omitted here for this simple prototype
-        # Assume test DERMS is run as a local process
+        # Assume the test DERMS is run as a local process.  Or modifiy to
+        # reference another server on the same LAN
         self.dermsURL = "http://localhost:8000"
 
     # Execute an HTTP verb used in 2030.5  Using the 'requests' package
