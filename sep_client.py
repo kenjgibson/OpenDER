@@ -25,10 +25,10 @@ from sep_types import *
 class SEPClient:
     def __init__(self, der_id=0):
         # Optionally accept a DER ID for interacting with the DERMS in a
-        # multi-DER simulation.  This mirrors the 2030.5 usage where the DER
-        # is pre-configured and registered with the DERMS out-of-band.
+        # multi-DER simulation.
         # If no ID provided, assume single DER simulation.
         self.id = der_id
+        self.id_string = '/' + str(self.id) + '/'
         return
 
     def discoverDERMS(self):
@@ -109,22 +109,22 @@ class SEPClient:
 
     # Get the Default DER Control structure
     def getDDERC(self):
-        endpoint = self.dermsURL + EP_DERPGM + EP_DDERCTL
+        endpoint = self.dermsURL + EP_DERPGM + self.id_string + EP_DDERCTL
         dict = self._doHTTP('GET', endpoint)
         return DefaultDERControl(dict)
 
     # Send the DERCapabilities to the DERMS.
     def sendDERCap(self, derCap):
-        endpoint = self.dermsURL + EP_END_DEVICE + EP_DER + EP_DERCAP
+        endpoint = self.dermsURL + EP_END_DEVICE + self.id_string + EP_DER + EP_DERCAP
         self._doHTTP('PUT', endpoint, derCap.toDict())
         return None
 
     def sendDERSettings(self, derSettings):
-        endpoint = self.dermsURL + EP_END_DEVICE + EP_DER + EP_DERSETTINGS
+        endpoint = self.dermsURL + EP_END_DEVICE + self.id_string + EP_DER + EP_DERSETTINGS
         self._doHTTP('PUT', endpoint, derSettings.toDict())
         return None
 
     def sendDERStatus( self, derStatus):
-        endpoint = self.dermsURL + EP_END_DEVICE + EP_DER + EP_DERSTATUS
+        endpoint = self.dermsURL + EP_END_DEVICE + self.id_string + EP_DER + EP_DERSTATUS
         self._doHTTP('PUT', endpoint, derStatus.toDict())
         return None
