@@ -27,7 +27,7 @@ import logging
 from    sep_types import *
 import  sep_client as sep
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Define DER parameter configuration directory (optional)
 script_path = pathlib.Path(os.path.dirname(__file__))
@@ -193,12 +193,12 @@ while t < 400:
     if t in pcc_v.keys():
         # change voltage at PCC at this time step
         der_test.update_der_input(v_pu=pcc_v[t])
-        logging.debug( f"Voltage change to {pcc_v[t]}% of nominal")
+        logging.info( f"Voltage change to {pcc_v[t]}% of nominal")
     
     if t in pcc_freq.keys():
         # change frequency at PCC at this time
         der_test.update_der_input(f=pcc_freq[t])
-        logging.debug( f"Frequency change to {pcc_freq[t]}Hz")
+        logging.info( f"Frequency change to {pcc_freq[t]}Hz")
 
     # Show the simulation is still alive in real-time simulation
     if t%5 == 0:
