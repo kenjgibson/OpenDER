@@ -1,6 +1,6 @@
 #!/usr/bin/env Python3
 #
-# Copyright © 2024 Kenneth J Gibson   kenjgibson@gmail.com
+# Copyright 2024 Kenneth J. Gibson
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
- 
+
 # Simple IEEE 2030.5 SEP client  
 
 import requests
@@ -23,18 +23,13 @@ import logging
 from sep_types import *
 
 class SEPClient:
-    def __init__(self, der_id=0):
-        # Optionally accept a DER ID for interacting with the DERMS in a
-        # multi-DER simulation.
-        # If no ID provided, assume single DER simulation.
-        self.id = der_id
-        self.id_string = '/' + str(self.id) + '/'
+    def __init__(self):
+        # Full implementation will take initial values here
         return
 
     def discoverDERMS(self):
         # LOTS of discovery and security omitted here for this simple prototype
-        # Assume the test DERMS is run as a local process.  Or modifiy to
-        # reference another server on the same LAN
+        # Assume test DERMS is run as a local process
         self.dermsURL = "http://localhost:8000"
 
     # Execute an HTTP verb used in 2030.5  Using the 'requests' package
@@ -109,22 +104,22 @@ class SEPClient:
 
     # Get the Default DER Control structure
     def getDDERC(self):
-        endpoint = self.dermsURL + EP_DERPGM + self.id_string + EP_DDERCTL
+        endpoint = self.dermsURL + EP_DERPGM + EP_DDERCTL
         dict = self._doHTTP('GET', endpoint)
         return DefaultDERControl(dict)
 
     # Send the DERCapabilities to the DERMS.
     def sendDERCap(self, derCap):
-        endpoint = self.dermsURL + EP_END_DEVICE + self.id_string + EP_DER + EP_DERCAP
+        endpoint = self.dermsURL + EP_END_DEVICE + EP_DER + EP_DERCAP
         self._doHTTP('PUT', endpoint, derCap.toDict())
         return None
 
     def sendDERSettings(self, derSettings):
-        endpoint = self.dermsURL + EP_END_DEVICE + self.id_string + EP_DER + EP_DERSETTINGS
+        endpoint = self.dermsURL + EP_END_DEVICE + EP_DER + EP_DERSETTINGS
         self._doHTTP('PUT', endpoint, derSettings.toDict())
         return None
 
     def sendDERStatus( self, derStatus):
-        endpoint = self.dermsURL + EP_END_DEVICE + self.id_string + EP_DER + EP_DERSTATUS
+        endpoint = self.dermsURL + EP_END_DEVICE + EP_DER + EP_DERSTATUS
         self._doHTTP('PUT', endpoint, derStatus.toDict())
         return None
