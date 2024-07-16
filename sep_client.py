@@ -28,7 +28,7 @@ class SEPClient:
         # multi-DER simulation.
         # If no ID provided, assume single DER simulation.
         self.id = der_id
-        self.id_string = '/' + str(self.id) + '/'
+        self.id_string = '/' + str(self.id)
         return
 
     def discoverDERMS(self):

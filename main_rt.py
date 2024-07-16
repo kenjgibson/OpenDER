@@ -17,6 +17,7 @@
 
 import pathlib
 import os
+import sys
 import matplotlib.pyplot as plt
 import opender as der
 #   Additions for real-time simulation
@@ -26,8 +27,28 @@ import logging
 #   Add IEEE 2030.5 Smart Energy Profile (SEP) interface
 from    sep_types import *
 import  sep_client as sep
+# For multi-DER simulation.
+import pandas as pd
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+
+# Constrain the number of DERs to some reasonable number.
+# The limit is really a function of the compute resources available
+max_der = 99
+
+# Get DER ID passed as command line argument
+if len(sys.argv) < 2:
+    # No DER ID provided.  Assume single DER simulation
+    der_id = 0
+else:
+    try:
+        der_id = int(sys.argv[1])
+    except ValueError:
+        print(f"Usage: main_rt.py <integer> in range 0..{max_der}")
+        sys.exit(1)
+    if der_id < 0 or der_id > max_der:
+        print(f"Usage: main_rt.py <integer> in range 0..{max_der}")
+        sys.exit(1)
 
 # Define DER parameter configuration directory (optional)
 script_path = pathlib.Path(os.path.dirname(__file__))
@@ -37,6 +58,36 @@ file_ss_obj = der.common_file_format.DERCommonFileFormat(as_file_path, model_fil
 
 # create the DER object
 der_test = der.DER(file_ss_obj)
+
+# Get the list of Voltage and Frequency change events for each DER
+# from a .csv file in the same directory as other DER parameter files.
+# Note:  Frequency values are in Hz, Voltage values are in pu.
+event_list_path = script_path.joinpath("src", "opender", "Parameters", "Event-list.csv")
+try:
+    event_list = pd.read_csv(event_list_path, header=0,   \
+                    skip_blank_lines=True, na_values=' ')
+except FileNotFoundError:
+    logging.info("No event list file found.  Assuming no Voltage or Frequency changes.")
+    event_list = None
+else:
+    # Excel sometimes adds rows of all NaNs.  Remove those.
+    event_list = event_list.dropna(axis=0, how='all')
+
+# Extract the events for this DER
+pcc_v = {}
+pcc_f = {}
+for step in event_list.index:
+    event = event_list.loc[step]
+    if event['DerID'] == der_id:
+        # Check for any change in Volts or Hz
+        # Pandas SHOULD interpret empty cells as NaN.
+        # In Python, NaN==NaN evaluates to False
+        if event['Volts'] == event['Volts']:
+            # Pandas refuses to interpret the column as float but the native
+            # Python float() conversion works fine.
+            pcc_v[event['TimeStep']] = float(event['Volts'])
+        if event['Hz'] == event['Hz']:
+            pcc_f[event['TimeStep']] = event['Hz']
 
 # assign simulation time step in Seconds
 t_s = 1
@@ -56,7 +107,7 @@ der_test.der_file.QV_MODE_ENABLE = True
 der_test.der_file.NP_ABNORMAL_OP_CAT = 'Cat_II'
 
 # Create a SEP Client to handle the 2030.5 interface with the DERMS
-sep_handler = sep.SEPClient()
+sep_handler = sep.SEPClient(der_id)
 # Discover and authenticate with the DERMS
 sep_handler.discoverDERMS()
 
@@ -165,44 +216,25 @@ der_test.der_file.ES_V_LOW = dderc.get('setESLowVolt')/100
 der_test.der_file.ES_RANDOMIZED_DELAY = dderc.get('setESRandomDelay')
 der_test.der_file.ES_RAMP_RATE = dderc.get('setGradW')
 
-# Lists (Python dictionaries) of simulated Voltage and Frequency changes
-# at points in time at the PCC to test Trip and Cessation behavior.
-# Key is the time step, Value is the new freq or %nominal voltage
-pcc_freq = {
-    5:58,           # Low freq may trip at 5 seconds
-    10:60,          # Return to normal
-    15:57,          # Must trip after .16S
-    20:60           # Back to normal
-}
-
-pcc_v = {
-    25:0.8,         # My trip after 1S
-    30:1,           # Return to nominal
-    35:0.5,         # Must trip quickly
-    40:1,
-    45:1.2,         # HV must trip
-    50:1
-}
-
 der_test.update_der_input(f=60, p_dc_pu=1)
 der_test.update_der_input(v_pu=1)           # Start with nominal voltage
 # For real-time simulation
 start_time = time.time()    #Seconds since epoch
 
-while t < 400:
+while t < 100:
     if t in pcc_v.keys():
         # change voltage at PCC at this time step
         der_test.update_der_input(v_pu=pcc_v[t])
-        logging.debug( f"Voltage change to {pcc_v[t]}% of nominal")
+        logging.info( f"DER {der_id} Voltage change to {pcc_v[t]} pu")
     
-    if t in pcc_freq.keys():
-        # change frequency at PCC at this time
-        der_test.update_der_input(f=pcc_freq[t])
-        logging.debug( f"Frequency change to {pcc_freq[t]}Hz")
+    if t in pcc_f.keys():
+        # change frequency at PCC at this timell
+        der_test.update_der_input(f=pcc_f[t])
+        logging.info( f"DER {der_id} Frequency change to {pcc_f[t]}Hz")
 
     # Show the simulation is still alive in real-time simulation
     if t%5 == 0:
-        logging.info(f"Time step = {t}")
+        logging.info(f"DER {der_id} Time step = {t}")
 
     # calculate output power at each time step
     der_test.run()
@@ -268,7 +300,8 @@ while t < 400:
         break
 
 # plot
-fig = plt.figure(figsize=[15,10])
+title = f"DER {der_id} Plots"
+fig = plt.figure(figsize=[15,10], num=title)
 plt.clf()
 ax1=plt.subplot(4, 1, 1)
 plt.plot(t_plot, v_plot, label = 'Voltage (pu)')
@@ -289,3 +322,5 @@ plt.grid()
 plt.legend()
 plt.xlabel('Time (s)')
 plt.show()
+
+sys.exit(0)
