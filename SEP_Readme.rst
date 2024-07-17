@@ -4,12 +4,14 @@ DER Management System (DERMS) via a subset of the IEEE 2030.5 Smart Electric
 Profile standard.
 
 Background
+----------
 IEEE standards 1547 and 2030.5 define functionality and software interfaces
 for smart 'grid-forming' inverters that can participate in maintaining grid
 stability as needed to allow high penetration of renewable, carbon-free 
 Distributed Energy Resources (DERs).  
 
 Problem Statement
+-----------------
 The electric power grid is a highly dynamic system wherein a variety of loads
 with varying complex impedances come and go.  Power system engineers put a great
 deal of effort into keeping Voltage, Frequency, and also the relationship 
@@ -31,6 +33,7 @@ ultimately replace the central power plant as the dominant player in maintaining
 grid stability.
 
 Prototype
+---------
 This simple prototype builds on the open source OpenDER software model created
 by the Electric Power Research Institute (EPRI) which emulates an IEEE 
 1547-compliant DER.  My prototype explores adding portions of the 2030.5
@@ -59,6 +62,7 @@ data types are used for many of the elements of 2030 data objects instead
 of the elementary types defined in sep.xml.
 
 V0.1 'alpha' Deltas from EPRI's OpenDER Model:
+----------------------------------------------
 - Added a "Test DERMS" which runs as a separate process.
 - Currently communicates with the OpenDER model through a local socket between
   the two processes.  Future goal is to move the Test DERMS to a uService on
@@ -73,6 +77,7 @@ V0.1 'alpha' Deltas from EPRI's OpenDER Model:
   in Voltage and Frequency at the PCC.
 
 Git branch 'multiDER' deltas:
+-----------------------------
 - Adds support for multiple DERs all interacting with one DERMS 2030.5 server;
 - Adds src/opender/Parameters/Event-list.csv, a .csv spreadsheet containing 
   Frequency and Voltage change events for each DER;
@@ -88,6 +93,7 @@ Additional Python Package Dependencies which may require a pip install:
 - socketserver
 
 Running the Model
+-----------------
 Using Python3, first start 'test_derms.py <m>' in one Linux or OS X
 shell/process where 'm' is the max number of DERs supported.  This will 
 listen on localhost port 8000.  Then, in a separate shell execute
